@@ -1,0 +1,2 @@
+com.czetsuyatech.nerv.exception.autoconfigure.NervExceptionPropertiesAutoConfiguration
+com.czetsuyatech.nerv.exception.autoconfigure.NervExceptionAutoConfiguration
