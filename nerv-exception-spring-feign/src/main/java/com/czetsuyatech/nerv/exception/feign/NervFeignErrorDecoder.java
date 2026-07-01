@@ -46,7 +46,7 @@ public class NervFeignErrorDecoder implements ErrorDecoder {
 
     NervErrorCode errorCode = errorCodeRegistry
         .findByCode(errorResponse.code())
-        .orElse(NativeNervErrorCodes.BAD_REQUEST);
+        .orElse(NativeNervErrorCodes.DOWNSTREAM_SERVICE_ERROR);
 
     if (errorCode.retryable()) {
       return new RetryableException(
@@ -59,7 +59,7 @@ public class NervFeignErrorDecoder implements ErrorDecoder {
       );
     }
 
-    return new NervDownstreamException(errorResponse);
+    return new NervDownstreamException(errorCode, errorResponse);
   }
 
   private NervErrorResponse readErrorResponse(Response response) {
