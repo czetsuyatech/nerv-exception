@@ -37,9 +37,10 @@
   </scm>
 
   <properties>
-    <java.version>25</java.version>
+    <java.version>21</java.version>
     <spring-boot.version>4.1.0</spring-boot.version>
     <micrometer-tracing.version>1.7.0</micrometer-tracing.version>
+    <maven.compiler.release>21</maven.compiler.release>
   </properties>
 
   <modules>

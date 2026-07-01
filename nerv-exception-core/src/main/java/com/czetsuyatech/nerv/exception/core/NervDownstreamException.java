@@ -1,14 +1,15 @@
 package com.czetsuyatech.nerv.exception.core;
 
+import com.czetsuyatech.nerv.exception.api.NervErrorCode;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
 import com.czetsuyatech.nerv.exception.core.model.NervErrorResponse;
 import java.util.Map;
 
 public class NervDownstreamException extends NervException {
 
-  public NervDownstreamException(NervErrorResponse response) {
+  public NervDownstreamException(NervErrorCode errorCode, NervErrorResponse response) {
     super(
-        NativeNervErrorCodes.DOWNSTREAM_SERVICE_ERROR,
+        errorCode,
         response.message(),
         Map.of(
             "downstreamCode", response.code(),
@@ -18,5 +19,9 @@ public class NervDownstreamException extends NervException {
             "downstreamTraceId", response.traceId(),
             "downstreamSpanId", response.spanId(),
             "downstreamPath", response.path()));
+  }
+
+  public NervDownstreamException(NervErrorResponse response) {
+    this(NativeNervErrorCodes.DOWNSTREAM_SERVICE_ERROR, response);
   }
 }
