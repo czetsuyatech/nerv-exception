@@ -7,6 +7,9 @@ import com.czetsuyatech.nerv.exception.api.NervErrorCode;
 import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
 import com.czetsuyatech.nerv.exception.core.model.NervErrorResponse;
+import com.czetsuyatech.nerv.exception.trace.NervTraceContext;
+import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
+import com.czetsuyatech.nerv.exception.trace.NoOpNervTraceContextResolver;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -197,20 +200,13 @@ class NervErrorResponseMapperTest {
     NervTraceContextResolver resolver =
         new NervTraceContextResolver() {
           @Override
-          public String traceId() {
-            return "trace-123";
-          }
-
-          @Override
-          public String spanId() {
-            return "span-456";
+          public NervTraceContext current() {
+            return NervTraceContext.empty();
           }
         };
 
     NervErrorResponseMapper mapper =
         new NervErrorResponseMapper(settings, resolver);
-
-    // assert response.traceId() and response.spanId()
   }
 
   private record TestRequest() {

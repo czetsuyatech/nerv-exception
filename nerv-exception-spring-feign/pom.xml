@@ -18,6 +18,11 @@
       <artifactId>nerv-exception-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.czetsuyatech.nerv</groupId>
+      <artifactId>nerv-exception-spring-web</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>io.github.openfeign</groupId>

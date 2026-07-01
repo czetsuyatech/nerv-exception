@@ -39,6 +39,7 @@
   <properties>
     <java.version>25</java.version>
     <spring-boot.version>4.1.0</spring-boot.version>
+    <micrometer-tracing.version>1.7.0</micrometer-tracing.version>
   </properties>
 
   <modules>
@@ -47,6 +48,8 @@
     <module>nerv-exception-spring-web</module>
     <module>nerv-exception-spring-boot-starter</module>
     <module>nerv-exception-spring-feign</module>
+    <module>nerv-exception-event</module>
+    <module>nerv-exception-spring-kafka</module>
   </modules>
 
   <dependencyManagement>
@@ -68,6 +71,7 @@
         <artifactId>lombok</artifactId>
         <version>1.18.46</version>
         <scope>provided</scope>
+        <optional>true</optional>
       </dependency>
     </dependencies>
   </dependencyManagement>

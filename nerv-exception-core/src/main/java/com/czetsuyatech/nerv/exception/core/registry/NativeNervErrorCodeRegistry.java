@@ -1,4 +1,4 @@
-package com.czetsuyatech.nerv.exception.core;
+package com.czetsuyatech.nerv.exception.core.registry;
 
 import com.czetsuyatech.nerv.exception.api.NervErrorCode;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;

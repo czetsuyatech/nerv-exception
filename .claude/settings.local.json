@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(mvn test:*)",
+      "Bash(java -version)",
+      "Bash(mvn -version)",
+      "Bash(echo \"JAVA_HOME=$JAVA_HOME\")",
+      "Read(//c/Users/czets/.jdks/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(JAVA_HOME=\"C:/Users/czets/.jdks/corretto-25.0.2\" mvn test -pl nerv-exception-spring-boot-starter -Dtest=NervExceptionFeignAutoConfigurationTest)",
+      "Bash(JAVA_HOME=\"C:/Users/czets/.jdks/corretto-25.0.2\" mvn test -pl nerv-exception-spring-feign)"
     ]
   }
 }

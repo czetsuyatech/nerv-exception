@@ -8,19 +8,32 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>nerv-exception-core</artifactId>
+  <artifactId>nerv-exception-event</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>NERV | Exception Core</name>
+  <name>NERV | Exception Event</name>
 
   <dependencies>
     <dependency>
       <groupId>com.czetsuyatech.nerv</groupId>
-      <artifactId>nerv-exception-api</artifactId>
+      <artifactId>nerv-exception-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
 </project>

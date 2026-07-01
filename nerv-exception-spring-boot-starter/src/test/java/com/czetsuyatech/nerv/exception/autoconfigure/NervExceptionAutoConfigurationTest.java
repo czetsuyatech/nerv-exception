@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.czetsuyatech.nerv.exception.web.NervErrorResponseMapper;
 import com.czetsuyatech.nerv.exception.web.NervExceptionHandler;
 import com.czetsuyatech.nerv.exception.web.NervExceptionSettings;
-import com.czetsuyatech.nerv.exception.web.NervTraceContextResolver;
+import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 

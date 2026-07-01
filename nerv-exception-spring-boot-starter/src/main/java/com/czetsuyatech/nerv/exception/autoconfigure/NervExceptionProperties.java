@@ -33,4 +33,15 @@ public class NervExceptionProperties {
    * Include stack trace in details.
    */
   private boolean includeStackTrace = false;
+
+  private Kafka kafka = new Kafka();
+
+  @Getter
+  @Setter
+  public static class Kafka {
+
+    private boolean enabled = true;
+    private String source = "application";
+    private String dlqTopicSuffix = ".DLQ";
+  }
 }

@@ -4,6 +4,7 @@ import com.czetsuyatech.nerv.exception.api.NervErrorCode;
 import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
 import com.czetsuyatech.nerv.exception.core.model.NervErrorResponse;
+import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -128,8 +129,8 @@ public class NervErrorResponseMapper {
         .status(errorCode.status())
         .retryable(errorCode.retryable())
         .category(errorCode.category())
-        .traceId(traceContextResolver.traceId())
-        .spanId(traceContextResolver.spanId())
+        .traceId(traceContextResolver.current().traceId())
+        .spanId(traceContextResolver.current().spanId())
         .path(request.getRequestURI())
         .timestamp(Instant.now())
         .details(details)

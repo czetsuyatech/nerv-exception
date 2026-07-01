@@ -2,11 +2,11 @@ package com.czetsuyatech.nerv.exception.feign;
 
 import com.czetsuyatech.nerv.exception.api.NervErrorCode;
 import com.czetsuyatech.nerv.exception.core.NervDownstreamException;
-import com.czetsuyatech.nerv.exception.core.NervErrorCodeRegistry;
-import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
 import com.czetsuyatech.nerv.exception.core.model.NervErrorResponse;
+import com.czetsuyatech.nerv.exception.core.registry.NervErrorCodeRegistry;
 import feign.Response;
+import feign.RetryableException;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,18 +44,22 @@ public class NervFeignErrorDecoder implements ErrorDecoder {
       return fallbackDecoder.decode(methodKey, response);
     }
 
-    if (response.status() >= 500) {
-      return new NervDownstreamException(errorResponse);
-    }
-
     NervErrorCode errorCode = errorCodeRegistry
         .findByCode(errorResponse.code())
         .orElse(NativeNervErrorCodes.BAD_REQUEST);
 
-    return new NervException(
-        errorCode,
-        errorResponse.message(),
-        errorResponse.details());
+    if (errorCode.retryable()) {
+      return new RetryableException(
+          response.status(),
+          errorResponse.message(),
+          response.request().httpMethod(),
+          null,
+          (Long) null,
+          response.request()
+      );
+    }
+
+    return new NervDownstreamException(errorResponse);
   }
 
   private NervErrorResponse readErrorResponse(Response response) {

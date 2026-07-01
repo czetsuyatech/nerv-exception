@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
+import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
+import com.czetsuyatech.nerv.exception.trace.NoOpNervTraceContextResolver;
 import jakarta.validation.ConstraintViolationException;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;

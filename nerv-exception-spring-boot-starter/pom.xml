@@ -23,10 +23,26 @@
       <artifactId>nerv-exception-spring-feign</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.czetsuyatech.nerv</groupId>
+      <artifactId>nerv-exception-event</artifactId>
+      <version>${project.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.czetsuyatech.nerv</groupId>
+      <artifactId>nerv-exception-spring-kafka</artifactId>
+      <version>${project.version}</version>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-kafka</artifactId>
     </dependency>
     <dependency>
       <groupId>jakarta.servlet</groupId>
@@ -40,6 +56,10 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-tracing</artifactId>
     </dependency>
 
     <dependency>
