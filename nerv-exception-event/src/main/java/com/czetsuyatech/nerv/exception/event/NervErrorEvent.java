@@ -1,5 +1,6 @@
 package com.czetsuyatech.nerv.exception.event;
 
+import com.czetsuyatech.nerv.exception.api.origin.NervOrigin;
 import java.time.Instant;
 import java.util.Map;
 import lombok.Builder;
@@ -18,6 +19,7 @@ public record NervErrorEvent(
     String topic,
     String key,
     Instant timestamp,
+    NervOrigin origin,
     Map<String, Object> details) {
 
 }

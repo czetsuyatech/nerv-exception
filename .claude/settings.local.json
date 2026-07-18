@@ -9,7 +9,9 @@
       "Read(//c/Users/czets/.jdks/**)",
       "Read(//c/Program Files/**)",
       "Bash(JAVA_HOME=\"C:/Users/czets/.jdks/corretto-25.0.2\" mvn test -pl nerv-exception-spring-boot-starter -Dtest=NervExceptionFeignAutoConfigurationTest)",
-      "Bash(JAVA_HOME=\"C:/Users/czets/.jdks/corretto-25.0.2\" mvn test -pl nerv-exception-spring-feign)"
+      "Bash(JAVA_HOME=\"C:/Users/czets/.jdks/corretto-25.0.2\" mvn test -pl nerv-exception-spring-feign)",
+      "Bash(./mvnw -q -pl nerv-exception-event,nerv-exception-spring-kafka -am test-compile)",
+      "Bash(mvn -q -pl nerv-exception-event,nerv-exception-spring-kafka -am test-compile)"
     ]
   }
 }

@@ -17,7 +17,7 @@ class DefaultNervErrorEventMapperTest {
 
     DefaultNervErrorEventMapper mapper = new DefaultNervErrorEventMapper(resolver);
 
-    NervException exception = new NervException(NativeNervErrorCodes.BAD_REQUEST);
+    NervException exception = NervException.of(NativeNervErrorCodes.BAD_REQUEST);
 
     NervErrorEvent event = mapper.from(exception, "service-a", "dlq.topic", "key-1");
 
@@ -33,7 +33,7 @@ class DefaultNervErrorEventMapperTest {
 
     DefaultNervErrorEventMapper mapper = new DefaultNervErrorEventMapper(resolver);
 
-    NervException exception = new NervException(
+    NervException exception = NervException.of(
         NativeNervErrorCodes.BAD_REQUEST, "bad input", Map.<String, Object>of("field", "name"));
 
     NervErrorEvent event = mapper.from(exception, "service-a", "dlq.topic", "key-1");
@@ -55,7 +55,7 @@ class DefaultNervErrorEventMapperTest {
 
     DefaultNervErrorEventMapper mapper = new DefaultNervErrorEventMapper(resolver);
 
-    NervException exception = new NervException(NativeNervErrorCodes.INTERNAL_SERVER_ERROR);
+    NervException exception = NervException.of(NativeNervErrorCodes.INTERNAL_SERVER_ERROR);
 
     NervErrorEvent event = mapper.from(exception, "service-a", "dlq.topic", "key-1");
 
@@ -69,7 +69,7 @@ class DefaultNervErrorEventMapperTest {
 
     DefaultNervErrorEventMapper mapper = new DefaultNervErrorEventMapper(resolver);
 
-    NervException exception = new NervException(NativeNervErrorCodes.BAD_REQUEST);
+    NervException exception = NervException.of(NativeNervErrorCodes.BAD_REQUEST);
 
     NervErrorEvent event = mapper.from(exception, "service-a", "dlq.topic", "key-1");
 

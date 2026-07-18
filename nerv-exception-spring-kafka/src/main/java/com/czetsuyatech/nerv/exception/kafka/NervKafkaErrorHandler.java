@@ -50,7 +50,7 @@ public class NervKafkaErrorHandler {
       return nervException;
     }
 
-    return new NervException(
+    return NervException.of(
         NativeNervErrorCodes.INTERNAL_SERVER_ERROR,
         exception.getMessage(),
         Map.of("exceptionType", exception.getClass().getName()));

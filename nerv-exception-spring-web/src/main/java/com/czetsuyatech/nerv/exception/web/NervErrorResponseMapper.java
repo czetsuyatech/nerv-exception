@@ -1,6 +1,7 @@
 package com.czetsuyatech.nerv.exception.web;
 
 import com.czetsuyatech.nerv.exception.api.NervErrorCode;
+import com.czetsuyatech.nerv.exception.api.origin.NervOriginResolver;
 import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
 import com.czetsuyatech.nerv.exception.core.model.NervErrorResponse;
@@ -26,6 +27,7 @@ public class NervErrorResponseMapper {
 
   private final NervExceptionSettings settings;
   private final NervTraceContextResolver traceContextResolver;
+  private final NervOriginResolver originResolver;
 
   public NervErrorResponse from(
       NervException exception,
@@ -134,6 +136,7 @@ public class NervErrorResponseMapper {
         .path(request.getRequestURI())
         .timestamp(Instant.now())
         .details(details)
+        .origin(originResolver.resolve())
         .build();
   }
 

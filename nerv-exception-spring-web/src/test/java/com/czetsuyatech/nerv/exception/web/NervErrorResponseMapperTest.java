@@ -7,6 +7,7 @@ import com.czetsuyatech.nerv.exception.api.NervErrorCode;
 import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
 import com.czetsuyatech.nerv.exception.core.model.NervErrorResponse;
+import com.czetsuyatech.nerv.exception.core.origin.NoOpNervOriginResolver;
 import com.czetsuyatech.nerv.exception.trace.NervTraceContext;
 import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import com.czetsuyatech.nerv.exception.trace.NoOpNervTraceContextResolver;
@@ -33,7 +34,7 @@ class NervErrorResponseMapperTest {
         false,
         false);
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE);
+    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE, new NoOpNervOriginResolver());
 
     NervException exception = Mockito.mock(NervException.class);
 
@@ -61,7 +62,7 @@ class NervErrorResponseMapperTest {
         false,
         false);
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE);
+    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE, new NoOpNervOriginResolver());
 
     Exception exception = new IllegalStateException("Database password leaked");
 
@@ -82,7 +83,7 @@ class NervErrorResponseMapperTest {
         false,
         false);
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE);
+    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE, new NoOpNervOriginResolver());
 
     Exception exception = new IllegalStateException("Actual internal error");
 
@@ -101,7 +102,7 @@ class NervErrorResponseMapperTest {
         true,
         false);
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE);
+    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE, new NoOpNervOriginResolver());
 
     Exception exception = new IllegalStateException(
         "Wrapper",
@@ -122,7 +123,7 @@ class NervErrorResponseMapperTest {
         false,
         true);
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE);
+    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE, new NoOpNervOriginResolver());
 
     Exception exception = new IllegalStateException("Stack trace error");
 
@@ -144,7 +145,7 @@ class NervErrorResponseMapperTest {
         false,
         false);
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE);
+    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE, new NoOpNervOriginResolver());
 
     BindException exception = new BindException(new TestRequest(), "request");
     exception.addError(new FieldError(
@@ -174,7 +175,7 @@ class NervErrorResponseMapperTest {
         false,
         false);
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE);
+    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, NO_OP_TRACE, new NoOpNervOriginResolver());
 
     BindException exception = new BindException(new TestRequest(), "request");
     exception.addError(new FieldError(
@@ -206,7 +207,7 @@ class NervErrorResponseMapperTest {
         };
 
     NervErrorResponseMapper mapper =
-        new NervErrorResponseMapper(settings, resolver);
+        new NervErrorResponseMapper(settings, resolver, new NoOpNervOriginResolver());
   }
 
   private record TestRequest() {

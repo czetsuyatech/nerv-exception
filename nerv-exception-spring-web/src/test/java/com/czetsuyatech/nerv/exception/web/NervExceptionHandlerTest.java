@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
+import com.czetsuyatech.nerv.exception.core.origin.NoOpNervOriginResolver;
 import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import com.czetsuyatech.nerv.exception.trace.NoOpNervTraceContextResolver;
 import jakarta.validation.ConstraintViolationException;
@@ -31,7 +32,7 @@ class NervExceptionHandlerTest {
         false);
     NervTraceContextResolver traceContextResolver = new NoOpNervTraceContextResolver();
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, traceContextResolver);
+    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, traceContextResolver, new NoOpNervOriginResolver());
 
     mockMvc = MockMvcBuilders
         .standaloneSetup(new TestController())
@@ -81,9 +82,7 @@ class NervExceptionHandlerTest {
 
     @GetMapping("/nerv")
     String nerv() {
-      throw new NervException(
-          NativeNervErrorCodes.CONFLICT,
-          "Duplicate resource");
+      throw NervException.of(NativeNervErrorCodes.CONFLICT, "Duplicate resource");
     }
 
     @GetMapping("/constraint")
