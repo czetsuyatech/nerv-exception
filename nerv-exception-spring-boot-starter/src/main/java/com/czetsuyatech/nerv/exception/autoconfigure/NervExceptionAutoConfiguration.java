@@ -1,5 +1,6 @@
 package com.czetsuyatech.nerv.exception.autoconfigure;
 
+import com.czetsuyatech.nerv.exception.api.origin.NervOriginResolver;
 import com.czetsuyatech.nerv.exception.core.registry.CompositeNervErrorCodeRegistry;
 import com.czetsuyatech.nerv.exception.core.registry.NativeNervErrorCodeRegistry;
 import com.czetsuyatech.nerv.exception.core.registry.NervErrorCodeRegistry;
@@ -27,10 +28,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.kafka.core.KafkaTemplate;
 import tools.jackson.databind.ObjectMapper;
 
@@ -42,6 +45,15 @@ import tools.jackson.databind.ObjectMapper;
     matchIfMissing = true
 )
 public class NervExceptionAutoConfiguration {
+
+  @Bean
+  @ConditionalOnMissingBean
+  NervOriginResolver nervOriginResolver(
+      Environment environment,
+      ObjectProvider<BuildProperties> buildProperties) {
+
+    return new DefaultNervOriginResolver(environment, buildProperties.getIfAvailable());
+  }
 
   @Configuration(proxyBeanMethods = false)
   @ConditionalOnProperty(
@@ -84,9 +96,10 @@ public class NervExceptionAutoConfiguration {
     @ConditionalOnMissingBean
     public NervErrorResponseMapper nervErrorResponseMapper(
         NervExceptionSettings settings,
-        NervTraceContextResolver traceContextResolver) {
+        NervTraceContextResolver traceContextResolver,
+        NervOriginResolver originResolver) {
 
-      return new NervErrorResponseMapper(settings, traceContextResolver);
+      return new NervErrorResponseMapper(settings, traceContextResolver, originResolver);
     }
 
     @Bean

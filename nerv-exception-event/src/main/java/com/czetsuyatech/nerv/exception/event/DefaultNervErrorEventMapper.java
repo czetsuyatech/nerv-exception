@@ -36,6 +36,7 @@ public class DefaultNervErrorEventMapper implements NervErrorEventMapper {
         topic,
         key,
         Instant.now(),
+        exception.getOrigin(),
         exception.getDetails() == null
             ? Map.of()
             : exception.getDetails());

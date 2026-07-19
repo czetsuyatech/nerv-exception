@@ -32,7 +32,7 @@ class NervKafkaErrorHandlerTest {
         new ConsumerRecord<>("payments", 0, 10L, "payment-1", "payload");
 
     var exception =
-        new NervException(NativeNervErrorCodes.INTERNAL_SERVER_ERROR, "Processing failed");
+        NervException.of(NativeNervErrorCodes.INTERNAL_SERVER_ERROR, "Processing failed");
 
     errorHandler.handle(record, exception);
 
@@ -53,7 +53,7 @@ class NervKafkaErrorHandlerTest {
         new ConsumerRecord<>("payments", 0, 10L, "payment-1", "payload");
 
     NervException exception =
-        new NervException(
+        NervException.of(
             NativeNervErrorCodes.INTERNAL_SERVER_ERROR,
             "Processing failed"
         );

@@ -59,7 +59,10 @@ public class NervFeignErrorDecoder implements ErrorDecoder {
       );
     }
 
-    return new NervDownstreamException(errorCode, errorResponse);
+    return NervDownstreamException.builder()
+        .errorCode(errorCode)
+        .response(errorResponse)
+        .build();
   }
 
   private NervErrorResponse readErrorResponse(Response response) {
