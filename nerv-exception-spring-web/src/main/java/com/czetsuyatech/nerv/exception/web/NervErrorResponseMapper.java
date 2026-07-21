@@ -16,10 +16,18 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RequiredArgsConstructor
@@ -76,6 +84,72 @@ public class NervErrorResponseMapper {
   }
 
   public NervErrorResponse from(
+      HandlerMethodValidationException exception,
+      HttpServletRequest request) {
+
+    return build(
+        NativeNervErrorCodes.VALIDATION_ERROR,
+        NativeNervErrorCodes.VALIDATION_ERROR.message(),
+        request,
+        handlerMethodValidationDetails(exception));
+  }
+
+  public NervErrorResponse from(
+      MissingServletRequestParameterException exception,
+      HttpServletRequest request) {
+
+    return build(
+        NativeNervErrorCodes.BAD_REQUEST,
+        NativeNervErrorCodes.BAD_REQUEST.message(),
+        request,
+        missingServletRequestParameterDetails(exception));
+  }
+
+  public NervErrorResponse from(
+      MissingRequestHeaderException exception,
+      HttpServletRequest request) {
+
+    return build(
+        NativeNervErrorCodes.BAD_REQUEST,
+        NativeNervErrorCodes.BAD_REQUEST.message(),
+        request,
+        missingRequestHeaderDetails(exception));
+  }
+
+  public NervErrorResponse from(
+      MissingPathVariableException exception,
+      HttpServletRequest request) {
+
+    return build(
+        NativeNervErrorCodes.BAD_REQUEST,
+        NativeNervErrorCodes.BAD_REQUEST.message(),
+        request,
+        missingPathVariableDetails(exception));
+  }
+
+  public NervErrorResponse from(
+      MethodArgumentTypeMismatchException exception,
+      HttpServletRequest request) {
+
+    return build(
+        NativeNervErrorCodes.BAD_REQUEST,
+        NativeNervErrorCodes.BAD_REQUEST.message(),
+        request,
+        methodArgumentTypeMismatchDetails(exception));
+  }
+
+  public NervErrorResponse from(
+      HttpMessageNotReadableException exception,
+      HttpServletRequest request) {
+
+    return build(
+        NativeNervErrorCodes.BAD_REQUEST,
+        NativeNervErrorCodes.BAD_REQUEST.message(),
+        request,
+        exceptionDetails(exception));
+  }
+
+  public NervErrorResponse from(
       NoHandlerFoundException exception,
       HttpServletRequest request) {
 
@@ -100,6 +174,41 @@ public class NervErrorResponseMapper {
     return build(
         NativeNervErrorCodes.METHOD_NOT_ALLOWED,
         NativeNervErrorCodes.METHOD_NOT_ALLOWED.message(),
+        request,
+        details);
+  }
+
+  public NervErrorResponse from(
+      HttpMediaTypeNotSupportedException exception,
+      HttpServletRequest request) {
+
+    Map<String, Object> details = exceptionDetails(exception);
+
+    if (settings.includeDetails()) {
+      details.put("contentType", exception.getContentType());
+      details.put("supportedMediaTypes", exception.getSupportedMediaTypes());
+    }
+
+    return build(
+        NativeNervErrorCodes.UNSUPPORTED_MEDIA_TYPE,
+        NativeNervErrorCodes.UNSUPPORTED_MEDIA_TYPE.message(),
+        request,
+        details);
+  }
+
+  public NervErrorResponse from(
+      HttpMediaTypeNotAcceptableException exception,
+      HttpServletRequest request) {
+
+    Map<String, Object> details = exceptionDetails(exception);
+
+    if (settings.includeDetails()) {
+      details.put("supportedMediaTypes", exception.getSupportedMediaTypes());
+    }
+
+    return build(
+        NativeNervErrorCodes.NOT_ACCEPTABLE,
+        NativeNervErrorCodes.NOT_ACCEPTABLE.message(),
         request,
         details);
   }
@@ -173,21 +282,6 @@ public class NervErrorResponseMapper {
     return details;
   }
 
-  private Map<String, String> fieldErrors(Iterable<FieldError> fieldErrors) {
-
-    Map<String, String> errors = new LinkedHashMap<>();
-
-    for (FieldError fieldError : fieldErrors) {
-      errors.putIfAbsent(
-          fieldError.getField(),
-          fieldError.getDefaultMessage() == null
-              ? "Invalid value"
-              : fieldError.getDefaultMessage());
-    }
-
-    return errors;
-  }
-
   private Map<String, Object> constraintViolationDetails(
       ConstraintViolationException exception) {
 
@@ -206,6 +300,96 @@ public class NervErrorResponseMapper {
     }
 
     return details;
+  }
+
+  private Map<String, Object> handlerMethodValidationDetails(
+      HandlerMethodValidationException exception) {
+
+    Map<String, Object> details = exceptionDetails(exception);
+
+    if (settings.includeDetails()) {
+      Map<String, String> errors = new LinkedHashMap<>();
+
+      exception.getParameterValidationResults().forEach(result ->
+          result.getResolvableErrors().forEach(error ->
+              errors.putIfAbsent(
+                  result.getMethodParameter().getParameterName(),
+                  error.getDefaultMessage() == null
+                      ? "Invalid value"
+                      : error.getDefaultMessage())));
+      details.put("errors", errors);
+    }
+
+    return details;
+  }
+
+  private Map<String, Object> missingServletRequestParameterDetails(
+      MissingServletRequestParameterException exception) {
+
+    Map<String, Object> details = exceptionDetails(exception);
+
+    if (settings.includeDetails()) {
+      details.put("parameter", exception.getParameterName());
+      details.put("expectedType", exception.getParameterType());
+    }
+
+    return details;
+  }
+
+  private Map<String, Object> missingRequestHeaderDetails(
+      MissingRequestHeaderException exception) {
+
+    Map<String, Object> details = exceptionDetails(exception);
+
+    if (settings.includeDetails()) {
+      details.put("header", exception.getHeaderName());
+    }
+
+    return details;
+  }
+
+  private Map<String, Object> missingPathVariableDetails(
+      MissingPathVariableException exception) {
+
+    Map<String, Object> details = exceptionDetails(exception);
+
+    if (settings.includeDetails()) {
+      details.put("variable", exception.getVariableName());
+    }
+
+    return details;
+  }
+
+  private Map<String, Object> methodArgumentTypeMismatchDetails(
+      MethodArgumentTypeMismatchException exception) {
+
+    Map<String, Object> details = exceptionDetails(exception);
+
+    if (settings.includeDetails()) {
+      details.put("parameter", exception.getName());
+      details.put("value", exception.getValue());
+
+      if (exception.getRequiredType() != null) {
+        details.put("expectedType", exception.getRequiredType().getSimpleName());
+      }
+    }
+
+    return details;
+  }
+
+  private Map<String, String> fieldErrors(Iterable<FieldError> fieldErrors) {
+
+    Map<String, String> errors = new LinkedHashMap<>();
+
+    for (FieldError fieldError : fieldErrors) {
+      errors.putIfAbsent(
+          fieldError.getField(),
+          fieldError.getDefaultMessage() == null
+              ? "Invalid value"
+              : fieldError.getDefaultMessage());
+    }
+
+    return errors;
   }
 
   private Map<String, Object> exceptionDetails(Exception exception) {

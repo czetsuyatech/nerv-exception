@@ -7,11 +7,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
@@ -52,6 +60,54 @@ public class NervExceptionHandler {
     return build(errorResponseMapper.from(exception, request));
   }
 
+  @ExceptionHandler(HandlerMethodValidationException.class)
+  public ResponseEntity<NervErrorResponse> handleHandlerMethodValidationException(
+      HandlerMethodValidationException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<NervErrorResponse> handleMissingServletRequestParameterException(
+      MissingServletRequestParameterException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
+  @ExceptionHandler(MissingRequestHeaderException.class)
+  public ResponseEntity<NervErrorResponse> handleMissingRequestHeaderException(
+      MissingRequestHeaderException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
+  @ExceptionHandler(MissingPathVariableException.class)
+  public ResponseEntity<NervErrorResponse> handleMissingPathVariableException(
+      MissingPathVariableException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<NervErrorResponse> handleMethodArgumentTypeMismatchException(
+      MethodArgumentTypeMismatchException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<NervErrorResponse> handleHttpMessageNotReadableException(
+      HttpMessageNotReadableException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
   @ExceptionHandler(NoHandlerFoundException.class)
   public ResponseEntity<NervErrorResponse> handleNoHandlerFoundException(
       NoHandlerFoundException exception,
@@ -68,6 +124,22 @@ public class NervExceptionHandler {
     return build(errorResponseMapper.from(exception, request));
   }
 
+  @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+  public ResponseEntity<NervErrorResponse> handleHttpMediaTypeNotSupportedException(
+      HttpMediaTypeNotSupportedException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
+  @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+  public ResponseEntity<NervErrorResponse> handleHttpMediaTypeNotAcceptableException(
+      HttpMediaTypeNotAcceptableException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<NervErrorResponse> handleException(
       Exception exception,
@@ -77,6 +149,7 @@ public class NervExceptionHandler {
   }
 
   private ResponseEntity<NervErrorResponse> build(NervErrorResponse response) {
+
     ResponseEntity.BodyBuilder builder = ResponseEntity
         .status(response.status())
         .header(NervErrorHeaders.ERROR_CODE, response.code())
