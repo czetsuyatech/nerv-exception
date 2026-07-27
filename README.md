@@ -376,6 +376,43 @@ Duplicate error codes are detected during startup.
 
 ---
 
+# Error Categories
+
+| Category       | Definition                                                                      | Typical HTTP Status                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **VALIDATION** | The request is invalid and must be corrected before retrying.                   | **400 Bad Request**, **422 Unprocessable Entity**                                                                             |
+| **BUSINESS**   | The request is valid but cannot be completed due to business or resource state. | **404 Not Found**, **409 Conflict**, **410 Gone**, **422 Unprocessable Entity**                                               |
+| **SECURITY**   | Authentication or authorization failure.                                        | **401 Unauthorized**, **403 Forbidden**                                                                                       |
+| **DEPENDENCY** | Failure caused by a downstream service or infrastructure dependency.            | **408 Request Timeout**, **429 Too Many Requests**, **502 Bad Gateway**, **503 Service Unavailable**, **504 Gateway Timeout** |
+| **SYSTEM**     | Unexpected application failure or configuration problem.                        | **500 Internal Server Error**                                                                                                 |
+
+
+## Examples
+
+| Exception                          | Category   | HTTP |
+|------------------------------------| ---------- | ---- |
+| `MethodArgumentNotValidException`  | VALIDATION | 400  |
+| `ConstraintViolationException`     | VALIDATION | 400  |
+| `HttpMessageNotReadableException`  | VALIDATION | 400  |
+| `IllegalArgumentException`         | VALIDATION | 400  |
+| `EntityNotFoundException`          | BUSINESS   | 404  |
+| `DuplicateKeyException`            | BUSINESS   | 409  |
+| `OptimisticLockException`          | BUSINESS   | 409  |
+| `BusinessRuleViolationException`   | BUSINESS   | 422  |
+| `BadCredentialsException`          | SECURITY   | 401  |
+| `AccessDeniedException`            | SECURITY   | 403  |
+| `FeignException.BadGateway`        | DEPENDENCY | 502  |
+| `FeignException.ServiceUnavailable` | DEPENDENCY | 503  |
+| `SocketTimeoutException`           | DEPENDENCY | 504  |
+| `CannotGetJdbcConnectionException` | DEPENDENCY | 503  |
+| `KafkaException`                   | DEPENDENCY | 503  |
+| `NullPointerException`             | SYSTEM     | 500  |
+| `IllegalStateException`            | SYSTEM     | 500  |
+| `Configuration/startup errors`      | SYSTEM     | 500  |
+
+
+---
+
 # Kafka Integration
 
 Enable:
