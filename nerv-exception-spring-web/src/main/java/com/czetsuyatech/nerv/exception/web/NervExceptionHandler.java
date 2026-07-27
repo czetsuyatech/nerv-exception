@@ -5,9 +5,13 @@ import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.model.NervErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import java.nio.file.AccessDeniedException;
+import javax.security.sasl.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -135,6 +139,22 @@ public class NervExceptionHandler {
   @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
   public ResponseEntity<NervErrorResponse> handleHttpMediaTypeNotAcceptableException(
       HttpMediaTypeNotAcceptableException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<NervErrorResponse> handleAccessDeniedException(
+      AccessDeniedException exception,
+      HttpServletRequest request) {
+
+    return build(errorResponseMapper.from(exception, request));
+  }
+
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<NervErrorResponse> handleAuthenticationException(
+      AuthenticationException exception,
       HttpServletRequest request) {
 
     return build(errorResponseMapper.from(exception, request));

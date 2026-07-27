@@ -9,14 +9,23 @@ import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.AccessDeniedException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.AccountExpiredException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
@@ -228,9 +237,54 @@ public class NervErrorResponseMapper {
         exceptionDetails(exception));
   }
 
+  public NervErrorResponse from(AuthenticationException exception, HttpServletRequest request) {
+
+    String authExceptionMessage = "Authentication error";
+    if (exception instanceof BadCredentialsException) {
+      authExceptionMessage = "Bad credentials";
+    }
+
+    if (exception instanceof InsufficientAuthenticationException) {
+      authExceptionMessage = "Insufficient authentication";
+    }
+
+    if (exception instanceof LockedException) {
+      authExceptionMessage = "Account locked";
+    }
+
+    if (exception instanceof DisabledException) {
+      authExceptionMessage = "Account disabled";
+    }
+
+    if (exception instanceof AccountExpiredException) {
+      authExceptionMessage = "Account expired";
+    }
+
+    if (exception instanceof CredentialsExpiredException) {
+      authExceptionMessage = "Credentials expired";
+    }
+
+    return build(
+        NativeNervErrorCodes.UNAUTHORIZED,
+        authExceptionMessage,
+        request,
+        exceptionDetails(exception)
+    );
+  }
+
+  public NervErrorResponse from(AccessDeniedException exception, HttpServletRequest request) {
+    return build(
+        NativeNervErrorCodes.UNAUTHORIZED,
+        NativeNervErrorCodes.UNAUTHORIZED.message(),
+        request,
+        exceptionDetails(exception)
+    );
+  }
+
+
   private NervErrorResponse build(
-      NervErrorCode errorCode,
-      String message,
+      @NotNull NervErrorCode errorCode,
+      @NotNull String message,
       HttpServletRequest request,
       Map<String, Object> details) {
 

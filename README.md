@@ -68,6 +68,46 @@ NERV Exception solves these problems through a unified error contract built arou
 * Conditional integrations
 * No component scanning
 
+### Security Exception Handling
+
+`nerv-exception` provides built-in handling for the core Spring Security exceptions:
+
+| Spring Security Exception | Native Error Code       |        HTTP Status |
+| ------------------------- | ----------------------- | -----------------: |
+| `AuthenticationException` | `AUTHENTICATION_FAILED` | `401 Unauthorized` |
+| `AccessDeniedException`   | `ACCESS_DENIED`         |    `403 Forbidden` |
+
+These exceptions represent the fundamental authentication and authorization semantics supported by Spring Security and are handled automatically by the library.
+
+### Newer Spring Security Exceptions
+
+Newer versions of Spring Security introduce additional exception types such as `AuthorizationDeniedException`. Since these are framework-specific implementations rather than core security abstractions, they are **not handled by the library by default**.
+
+If your application uses these newer APIs, register an application-specific exception handler with a higher precedence:
+
+```java
+@RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class SecurityExceptionHandler {
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<NervErrorResponse> handle(
+            AuthorizationDeniedException ex,
+            HttpServletRequest request) {
+
+        NervException nervException =
+                NervException.of(NativeNervErrorCodes.ACCESS_DENIED, ex);
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(NervErrorResponseMapper.toResponse(nervException, request));
+    }
+}
+```
+
+This approach keeps `nerv-exception` independent of framework-specific implementations while allowing applications to support newer Spring Security features without changing the library.
+
+
 ---
 
 ## Architecture

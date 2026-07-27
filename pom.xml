@@ -43,7 +43,6 @@
 
   <properties>
     <java.version>21</java.version>
-    <spring-boot.version>4.1.0</spring-boot.version>
     <micrometer-tracing.version>1.7.0</micrometer-tracing.version>
   </properties>
 
@@ -59,13 +58,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${spring-boot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
       <dependency>
         <groupId>io.github.openfeign</groupId>
         <artifactId>feign-core</artifactId>
