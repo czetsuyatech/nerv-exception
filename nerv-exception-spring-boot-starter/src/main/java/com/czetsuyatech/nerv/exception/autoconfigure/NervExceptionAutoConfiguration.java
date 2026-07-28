@@ -17,7 +17,7 @@ import com.czetsuyatech.nerv.exception.trace.MicrometerNervTraceContextResolver;
 import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import com.czetsuyatech.nerv.exception.trace.NoOpNervTraceContextResolver;
 import com.czetsuyatech.nerv.exception.web.NervErrorResponseMapper;
-import com.czetsuyatech.nerv.exception.web.NervExceptionHandler;
+import com.czetsuyatech.nerv.exception.web.DefaultNervExceptionHandler;
 import com.czetsuyatech.nerv.exception.web.NervExceptionSettings;
 import feign.codec.ErrorDecoder;
 import java.util.ArrayList;
@@ -104,10 +104,10 @@ public class NervExceptionAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public NervExceptionHandler nervExceptionHandler(
+    public DefaultNervExceptionHandler nervExceptionHandler(
         NervErrorResponseMapper errorResponseMapper) {
 
-      return new NervExceptionHandler(errorResponseMapper);
+      return new DefaultNervExceptionHandler(errorResponseMapper);
     }
 
     @Configuration(proxyBeanMethods = false)

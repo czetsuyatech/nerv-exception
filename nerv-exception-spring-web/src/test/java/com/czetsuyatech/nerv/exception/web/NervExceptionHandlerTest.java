@@ -1,98 +1,124 @@
 package com.czetsuyatech.nerv.exception.web;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.czetsuyatech.nerv.exception.core.NervException;
-import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
-import com.czetsuyatech.nerv.exception.core.origin.NoOpNervOriginResolver;
-import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
-import com.czetsuyatech.nerv.exception.trace.NoOpNervTraceContextResolver;
-import jakarta.validation.ConstraintViolationException;
-import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
+import com.czetsuyatech.nerv.exception.core.NervErrorHeaders;
+import com.czetsuyatech.nerv.exception.core.model.NervErrorResponse;
+import java.time.Instant;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.http.ResponseEntity;
 
+/**
+ * Unit tests for the default {@code build}/{@code addHeader} methods contributed by the
+ * {@link NervExceptionHandler} mixin. {@link DefaultNervExceptionHandlerTest} covers the same
+ * behaviour end to end through MockMvc.
+ */
 class NervExceptionHandlerTest {
 
-  private MockMvc mockMvc;
+  private final NervExceptionHandler handler = new NervExceptionHandler() {
+  };
 
-  @BeforeEach
-  void setUp() {
+  @Test
+  void shouldUseTheErrorCodeStatusAsTheResponseStatus() {
 
-    NervExceptionSettings settings = new NervExceptionSettings(
-        true,
-        false,
-        false,
-        false);
-    NervTraceContextResolver traceContextResolver = new NoOpNervTraceContextResolver();
+    ResponseEntity<NervErrorResponse> entity = handler.build(response().build());
 
-    NervErrorResponseMapper mapper = new NervErrorResponseMapper(settings, traceContextResolver, new NoOpNervOriginResolver());
+    assertThat(entity.getStatusCode().value()).isEqualTo(409);
+  }
 
-    mockMvc = MockMvcBuilders
-        .standaloneSetup(new TestController())
-        .setControllerAdvice(new NervExceptionHandler(mapper))
+  @Test
+  void shouldUseTheResponseAsTheBody() {
+
+    NervErrorResponse response = response()
+        .details(Map.of("field", "value"))
         .build();
+
+    ResponseEntity<NervErrorResponse> entity = handler.build(response);
+
+    assertThat(entity.getBody()).isSameAs(response);
   }
 
   @Test
-  void shouldHandleNervException() throws Exception {
+  void shouldExposeCodeCategoryAndRetryableAsHeaders() {
 
-    mockMvc.perform(get("/nerv"))
-        .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.code").value("CONFLICT"))
-        .andExpect(jsonPath("$.message").value("Duplicate resource"))
-        .andExpect(jsonPath("$.status").value(409))
-        .andExpect(jsonPath("$.path").value("/nerv"));
+    ResponseEntity<NervErrorResponse> entity = handler.build(response().build());
+
+    assertThat(entity.getHeaders().getFirst(NervErrorHeaders.ERROR_CODE))
+        .isEqualTo("CONFLICT");
+    assertThat(entity.getHeaders().getFirst(NervErrorHeaders.ERROR_CATEGORY))
+        .isEqualTo("CLIENT");
+    assertThat(entity.getHeaders().getFirst(NervErrorHeaders.ERROR_RETRYABLE))
+        .isEqualTo("false");
   }
 
   @Test
-  void shouldHandleConstraintViolationException() throws Exception {
+  void shouldRenderRetryableAsTrueForRetryableErrorCodes() {
 
-    mockMvc.perform(get("/constraint"))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.code")
-            .value(NativeNervErrorCodes.CONSTRAINT_VIOLATION.code()))
-        .andExpect(jsonPath("$.message")
-            .value(NativeNervErrorCodes.CONSTRAINT_VIOLATION.message()))
-        .andExpect(jsonPath("$.status").value(400))
-        .andExpect(jsonPath("$.path").value("/constraint"));
+    ResponseEntity<NervErrorResponse> entity =
+        handler.build(response().retryable(true).build());
+
+    assertThat(entity.getHeaders().getFirst(NervErrorHeaders.ERROR_RETRYABLE))
+        .isEqualTo("true");
   }
 
   @Test
-  void shouldHandleUnhandledException() throws Exception {
+  void shouldExposeTraceAndSpanIdsAsHeaders() {
 
-    mockMvc.perform(get("/error"))
-        .andExpect(status().isInternalServerError())
-        .andExpect(jsonPath("$.code")
-            .value(NativeNervErrorCodes.INTERNAL_SERVER_ERROR.code()))
-        .andExpect(jsonPath("$.message")
-            .value(NativeNervErrorCodes.INTERNAL_SERVER_ERROR.message()))
-        .andExpect(jsonPath("$.status").value(500))
-        .andExpect(jsonPath("$.path").value("/error"));
+    NervErrorResponse response = response()
+        .traceId("0af7651916cd43dd8448eb211c80319c")
+        .spanId("b9c7c989f97918e1")
+        .build();
+
+    ResponseEntity<NervErrorResponse> entity = handler.build(response);
+
+    assertThat(entity.getHeaders().getFirst(NervErrorHeaders.TRACE_ID))
+        .isEqualTo("0af7651916cd43dd8448eb211c80319c");
+    assertThat(entity.getHeaders().getFirst(NervErrorHeaders.SPAN_ID))
+        .isEqualTo("b9c7c989f97918e1");
   }
 
-  @RestController
-  static class TestController {
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = {"", " ", "\t"})
+  void shouldOmitTraceAndSpanHeadersWhenTheyAreNullOrBlank(String value) {
 
-    @GetMapping("/nerv")
-    String nerv() {
-      throw NervException.of(NativeNervErrorCodes.CONFLICT, "Duplicate resource");
-    }
+    NervErrorResponse response = response()
+        .traceId(value)
+        .spanId(value)
+        .build();
 
-    @GetMapping("/constraint")
-    String constraint() {
-      throw new ConstraintViolationException("Constraint violation", Set.of());
-    }
+    ResponseEntity<NervErrorResponse> entity = handler.build(response);
 
-    @GetMapping("/error")
-    String error() {
-      throw new IllegalStateException("boom");
-    }
+    assertThat(entity.getHeaders().containsHeader(NervErrorHeaders.TRACE_ID)).isFalse();
+    assertThat(entity.getHeaders().containsHeader(NervErrorHeaders.SPAN_ID)).isFalse();
+  }
+
+  @Test
+  void shouldOmitOnlyTheMissingTraceHeader() {
+
+    NervErrorResponse response = response()
+        .traceId("0af7651916cd43dd8448eb211c80319c")
+        .spanId(null)
+        .build();
+
+    ResponseEntity<NervErrorResponse> entity = handler.build(response);
+
+    assertThat(entity.getHeaders().containsHeader(NervErrorHeaders.TRACE_ID)).isTrue();
+    assertThat(entity.getHeaders().containsHeader(NervErrorHeaders.SPAN_ID)).isFalse();
+  }
+
+  private static NervErrorResponse.NervErrorResponseBuilder response() {
+    return NervErrorResponse.builder()
+        .code("CONFLICT")
+        .message("Conflict")
+        .status(409)
+        .retryable(false)
+        .category("CLIENT")
+        .path("/api/test")
+        .timestamp(Instant.parse("2026-06-23T00:00:00Z"));
   }
 }

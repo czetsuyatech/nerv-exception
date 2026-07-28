@@ -3,7 +3,7 @@ package com.czetsuyatech.nerv.exception.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.czetsuyatech.nerv.exception.web.NervErrorResponseMapper;
-import com.czetsuyatech.nerv.exception.web.NervExceptionHandler;
+import com.czetsuyatech.nerv.exception.web.DefaultNervExceptionHandler;
 import com.czetsuyatech.nerv.exception.web.NervExceptionSettings;
 import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ class NervExceptionAutoConfigurationTest {
       assertThat(context).hasSingleBean(NervExceptionProperties.class);
       assertThat(context).hasSingleBean(NervExceptionSettings.class);
       assertThat(context).hasSingleBean(NervErrorResponseMapper.class);
-      assertThat(context).hasSingleBean(NervExceptionHandler.class);
+      assertThat(context).hasSingleBean(DefaultNervExceptionHandler.class);
       assertThat(context).hasSingleBean(NervTraceContextResolver.class);
     });
   }
@@ -38,7 +38,7 @@ class NervExceptionAutoConfigurationTest {
           assertThat(context).hasSingleBean(NervExceptionProperties.class);
           assertThat(context).doesNotHaveBean(NervExceptionSettings.class);
           assertThat(context).doesNotHaveBean(NervErrorResponseMapper.class);
-          assertThat(context).doesNotHaveBean(NervExceptionHandler.class);
+          assertThat(context).doesNotHaveBean(DefaultNervExceptionHandler.class);
         });
   }
 
