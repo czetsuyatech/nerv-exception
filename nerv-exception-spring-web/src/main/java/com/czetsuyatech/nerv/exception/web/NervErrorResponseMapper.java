@@ -281,8 +281,7 @@ public class NervErrorResponseMapper {
     );
   }
 
-
-  private NervErrorResponse build(
+  public NervErrorResponse build(
       @NotNull NervErrorCode errorCode,
       @NotNull String message,
       HttpServletRequest request,
@@ -446,7 +445,7 @@ public class NervErrorResponseMapper {
     return errors;
   }
 
-  private Map<String, Object> exceptionDetails(Exception exception) {
+  public Map<String, Object> exceptionDetails(Exception exception) {
 
     Map<String, Object> details = new LinkedHashMap<>();
 
