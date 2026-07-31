@@ -72,6 +72,17 @@
       <artifactId>spring-boot-webmvc-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- Required for testing - NervErrorResponseMapper imports Spring ORM classes -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>

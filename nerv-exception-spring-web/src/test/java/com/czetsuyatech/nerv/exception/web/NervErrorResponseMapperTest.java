@@ -699,6 +699,224 @@ class NervErrorResponseMapperTest {
   }
 
   // ---------------------------------------------------------------------
+  // JPA / Spring Data
+  // ---------------------------------------------------------------------
+
+  @Test
+  void shouldMapDataIntegrityViolationExceptionToConflict() {
+
+    org.springframework.dao.DataIntegrityViolationException exception =
+        new org.springframework.dao.DataIntegrityViolationException(
+            "could not execute statement; SQL [n/a]; constraint [uk_users_email]");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.CONFLICT.code());
+    assertThat(response.message()).isEqualTo("A resource with the same unique identifier already exists");
+    assertThat(response.status()).isEqualTo(409);
+    assertThat(response.retryable()).isFalse();
+    assertThat(response.category()).isEqualTo("CLIENT");
+  }
+
+  @Test
+  void shouldExtractConstraintNameFromPostgreSQLViolation() {
+
+    org.springframework.dao.DataIntegrityViolationException exception =
+        new org.springframework.dao.DataIntegrityViolationException(
+            "ERROR: duplicate key value violates unique constraint \"users_email_key\"");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.details()).containsEntry("constraint", "users_email_key");
+  }
+
+  @Test
+  void shouldExtractConstraintNameFromMySQLViolation() {
+
+    org.springframework.dao.DataIntegrityViolationException exception =
+        new org.springframework.dao.DataIntegrityViolationException(
+            "Duplicate entry 'john@example.com' for key 'uk_users_email'");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.details()).containsEntry("constraint", "uk_users_email");
+  }
+
+  @Test
+  void shouldExtractConstraintNameFromH2Violation() {
+
+    org.springframework.dao.DataIntegrityViolationException exception =
+        new org.springframework.dao.DataIntegrityViolationException(
+            "Unique index or primary key violation: \"UK_USERS_EMAIL\"");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.details()).containsEntry("constraint", "UK_USERS_EMAIL");
+  }
+
+  @Test
+  void shouldNotIncludeDataIntegrityViolationDetailsWhenDetailsDisabled() {
+
+    org.springframework.dao.DataIntegrityViolationException exception =
+        new org.springframework.dao.DataIntegrityViolationException(
+            "Duplicate entry 'john@example.com' for key 'uk_users_email'");
+
+    NervErrorResponse response = mapper(DETAILS_OFF).from(exception, REQUEST);
+
+    assertThat(response.details()).isEmpty();
+  }
+
+  @Test
+  void shouldMapObjectOptimisticLockingFailureExceptionToOptimisticLockConflict() {
+
+    org.springframework.orm.ObjectOptimisticLockingFailureException exception =
+        new org.springframework.orm.ObjectOptimisticLockingFailureException(
+            "com.example.User", 42L);
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.OPTIMISTIC_LOCK_CONFLICT.code());
+    assertThat(response.message()).isEqualTo("The resource was modified by another transaction. Please refresh and retry.");
+    assertThat(response.status()).isEqualTo(409);
+    assertThat(response.retryable()).isTrue();
+    assertThat(response.category()).isEqualTo("DATA");
+    assertThat(response.details()).containsEntry("entityType", "com.example.User");
+    assertThat(response.details()).containsEntry("identifier", "42");
+  }
+
+  @Test
+  void shouldNotIncludeOptimisticLockDetailsWhenDetailsDisabled() {
+
+    org.springframework.orm.ObjectOptimisticLockingFailureException exception =
+        new org.springframework.orm.ObjectOptimisticLockingFailureException(
+            "com.example.User", 42L);
+
+    NervErrorResponse response = mapper(DETAILS_OFF).from(exception, REQUEST);
+
+    assertThat(response.details()).isEmpty();
+  }
+
+  @Test
+  void shouldMapJpaOptimisticLockExceptionToOptimisticLockConflict() {
+
+    jakarta.persistence.OptimisticLockException exception =
+        new jakarta.persistence.OptimisticLockException("Entity version mismatch");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.OPTIMISTIC_LOCK_CONFLICT.code());
+    assertThat(response.message()).isEqualTo("The resource was modified by another transaction. Please refresh and retry.");
+    assertThat(response.status()).isEqualTo(409);
+    assertThat(response.retryable()).isTrue();
+    assertThat(response.category()).isEqualTo("DATA");
+  }
+
+  @Test
+  void shouldMapIncorrectResultSizeDataAccessExceptionToAmbiguousResult() {
+
+    org.springframework.dao.IncorrectResultSizeDataAccessException exception =
+        new org.springframework.dao.IncorrectResultSizeDataAccessException(1, 3);
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.AMBIGUOUS_RESULT.code());
+    assertThat(response.message()).isEqualTo(NativeNervErrorCodes.AMBIGUOUS_RESULT.message());
+    assertThat(response.status()).isEqualTo(500);
+    assertThat(response.retryable()).isFalse();
+    assertThat(response.category()).isEqualTo("SYSTEM");
+    // Should NOT include internal details that could leak information about a bug
+    assertThat(response.details()).doesNotContainKey("expectedSize");
+    assertThat(response.details()).doesNotContainKey("actualSize");
+  }
+
+  @Test
+  void shouldMapEmptyResultDataAccessExceptionToResourceNotFound() {
+
+    org.springframework.dao.EmptyResultDataAccessException exception =
+        new org.springframework.dao.EmptyResultDataAccessException(1);
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.RESOURCE_NOT_FOUND.code());
+    assertThat(response.message()).isEqualTo("The requested resource was not found");
+    assertThat(response.status()).isEqualTo(404);
+    assertThat(response.retryable()).isFalse();
+    assertThat(response.category()).isEqualTo("CLIENT");
+  }
+
+  @Test
+  void shouldMapNoResultExceptionToResourceNotFound() {
+
+    jakarta.persistence.NoResultException exception =
+        new jakarta.persistence.NoResultException("No entity found for query");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.RESOURCE_NOT_FOUND.code());
+    assertThat(response.message()).isEqualTo("The requested resource was not found");
+    assertThat(response.status()).isEqualTo(404);
+  }
+
+  @Test
+  void shouldMapPessimisticLockingFailureExceptionToLockTimeout() {
+
+    org.springframework.dao.PessimisticLockingFailureException exception =
+        new org.springframework.dao.PessimisticLockingFailureException(
+            "Could not acquire lock on row");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.LOCK_TIMEOUT.code());
+    assertThat(response.message()).isEqualTo("The resource is currently locked by another operation. Please try again later.");
+    assertThat(response.status()).isEqualTo(503);
+    assertThat(response.retryable()).isTrue();
+    assertThat(response.category()).isEqualTo("DATA");
+  }
+
+  @Test
+  void shouldMapJpaPessimisticLockExceptionToLockTimeout() {
+
+    jakarta.persistence.PessimisticLockException exception =
+        new jakarta.persistence.PessimisticLockException("Lock timeout");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.LOCK_TIMEOUT.code());
+    assertThat(response.message()).isEqualTo("The resource is currently locked by another operation. Please try again later.");
+    assertThat(response.status()).isEqualTo(503);
+    assertThat(response.retryable()).isTrue();
+  }
+
+  @Test
+  void shouldMapHibernateConstraintViolationExceptionToConstraintViolation() {
+
+    org.hibernate.exception.ConstraintViolationException exception =
+        new org.hibernate.exception.ConstraintViolationException(
+            "could not execute statement", null, "uk_users_email");
+
+    NervErrorResponse response = mapper(DETAILS_ON).from(exception, REQUEST);
+
+    assertThat(response.code()).isEqualTo(NativeNervErrorCodes.CONSTRAINT_VIOLATION.code());
+    assertThat(response.message()).isEqualTo("Data validation failed due to constraint violation");
+    assertThat(response.status()).isEqualTo(400);
+    assertThat(response.retryable()).isFalse();
+    assertThat(response.category()).isEqualTo("VALIDATION");
+    assertThat(response.details()).containsEntry("constraint", "uk_users_email");
+  }
+
+  @Test
+  void shouldNotIncludeHibernateConstraintViolationDetailsWhenDetailsDisabled() {
+
+    org.hibernate.exception.ConstraintViolationException exception =
+        new org.hibernate.exception.ConstraintViolationException(
+            "could not execute statement", null, "uk_users_email");
+
+    NervErrorResponse response = mapper(DETAILS_OFF).from(exception, REQUEST);
+
+    assertThat(response.details()).isEmpty();
+  }
+
+  // ---------------------------------------------------------------------
   // Cross-cutting response fields
   // ---------------------------------------------------------------------
 
