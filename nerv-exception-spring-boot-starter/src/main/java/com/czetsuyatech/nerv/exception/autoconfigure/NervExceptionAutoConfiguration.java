@@ -10,14 +10,15 @@ import com.czetsuyatech.nerv.exception.event.NervErrorEventMapper;
 import com.czetsuyatech.nerv.exception.event.NervEventTraceContextResolver;
 import com.czetsuyatech.nerv.exception.event.NoOpNervEventTraceContextResolver;
 import com.czetsuyatech.nerv.exception.feign.NervFeignErrorDecoder;
+import com.czetsuyatech.nerv.exception.jpa.NervJpaExceptionHandler;
 import com.czetsuyatech.nerv.exception.kafka.NervKafkaDlqPublisher;
 import com.czetsuyatech.nerv.exception.kafka.NervKafkaErrorHandler;
 import com.czetsuyatech.nerv.exception.kafka.NervKafkaHeaderMapper;
 import com.czetsuyatech.nerv.exception.trace.MicrometerNervTraceContextResolver;
 import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import com.czetsuyatech.nerv.exception.trace.NoOpNervTraceContextResolver;
-import com.czetsuyatech.nerv.exception.web.NervErrorResponseMapper;
 import com.czetsuyatech.nerv.exception.web.DefaultNervExceptionHandler;
+import com.czetsuyatech.nerv.exception.web.NervErrorResponseMapper;
 import com.czetsuyatech.nerv.exception.web.NervExceptionSettings;
 import feign.codec.ErrorDecoder;
 import java.util.ArrayList;
@@ -108,6 +109,22 @@ public class NervExceptionAutoConfiguration {
         NervErrorResponseMapper errorResponseMapper) {
 
       return new DefaultNervExceptionHandler(errorResponseMapper);
+    }
+
+    @ConditionalOnClass(org.springframework.dao.DataAccessException.class)
+    @ConditionalOnProperty(
+        prefix = "nerv.exception.jpa",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true
+    )
+    static class JpaConfiguration {
+
+      @Bean
+      @ConditionalOnMissingBean
+      NervJpaExceptionHandler nervJpaExceptionHandler(NervErrorResponseMapper errorResponseMapper) {
+        return new NervJpaExceptionHandler(errorResponseMapper);
+      }
     }
 
     @Configuration(proxyBeanMethods = false)

@@ -20,6 +20,11 @@
     </dependency>
     <dependency>
       <groupId>com.czetsuyatech.nerv</groupId>
+      <artifactId>nerv-exception-jpa</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.czetsuyatech.nerv</groupId>
       <artifactId>nerv-exception-spring-feign</artifactId>
       <version>${project.version}</version>
     </dependency>

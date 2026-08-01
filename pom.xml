@@ -54,6 +54,7 @@
     <module>nerv-exception-spring-feign</module>
     <module>nerv-exception-event</module>
     <module>nerv-exception-spring-kafka</module>
+    <module>nerv-exception-jpa</module>
   </modules>
 
   <dependencyManagement>

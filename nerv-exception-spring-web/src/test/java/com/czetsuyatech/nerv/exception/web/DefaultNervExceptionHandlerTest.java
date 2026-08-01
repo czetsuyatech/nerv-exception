@@ -2,51 +2,24 @@ package com.czetsuyatech.nerv.exception.web;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.czetsuyatech.nerv.exception.core.NervErrorHeaders;
-import com.czetsuyatech.nerv.exception.core.NervException;
 import com.czetsuyatech.nerv.exception.core.code.NativeNervErrorCodes;
 import com.czetsuyatech.nerv.exception.core.origin.NoOpNervOriginResolver;
 import com.czetsuyatech.nerv.exception.trace.NervTraceContext;
 import com.czetsuyatech.nerv.exception.trace.NervTraceContextResolver;
 import com.czetsuyatech.nerv.exception.trace.NoOpNervTraceContextResolver;
-import jakarta.validation.ConstraintViolationException;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Set;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
-import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.core.MethodParameter;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.mock.http.MockHttpInputMessage;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.BindException;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.method.MethodValidationResult;
-import org.springframework.validation.method.ParameterValidationResult;
-import org.springframework.web.HttpMediaTypeNotAcceptableException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingPathVariableException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.method.annotation.HandlerMethodValidationException;
-import org.springframework.web.servlet.NoHandlerFoundException;
 
 class DefaultNervExceptionHandlerTest {
 
@@ -196,6 +169,7 @@ class DefaultNervExceptionHandlerTest {
   void shouldHandleHandlerMethodValidationException() throws Exception {
 
     mockMvc.perform(get("/handler-method-validation"))
+        .andDo(print())
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.code")
             .value(NativeNervErrorCodes.VALIDATION_ERROR.code()))
@@ -357,102 +331,6 @@ class DefaultNervExceptionHandlerTest {
   }
 
   // ---------------------------------------------------------------------
-  // JPA / Spring Data
-  // ---------------------------------------------------------------------
-
-  @Test
-  void shouldHandleDataIntegrityViolationException() throws Exception {
-
-    mockMvc.perform(get("/data-integrity-violation"))
-        .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.CONFLICT.code()))
-        .andExpect(jsonPath("$.status").value(409))
-        .andExpect(jsonPath("$.message").value("A resource with the same unique identifier already exists"));
-  }
-
-  @Test
-  void shouldHandleObjectOptimisticLockingFailureException() throws Exception {
-
-    mockMvc.perform(get("/object-optimistic-lock"))
-        .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.OPTIMISTIC_LOCK_CONFLICT.code()))
-        .andExpect(jsonPath("$.status").value(409))
-        .andExpect(jsonPath("$.retryable").value(true))
-        .andExpect(jsonPath("$.category").value("DATA"));
-  }
-
-  @Test
-  void shouldHandleJpaOptimisticLockException() throws Exception {
-
-    mockMvc.perform(get("/jpa-optimistic-lock"))
-        .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.OPTIMISTIC_LOCK_CONFLICT.code()))
-        .andExpect(jsonPath("$.status").value(409))
-        .andExpect(jsonPath("$.retryable").value(true));
-  }
-
-  @Test
-  void shouldHandleIncorrectResultSizeDataAccessException() throws Exception {
-
-    mockMvc.perform(get("/incorrect-result-size"))
-        .andExpect(status().isInternalServerError())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.AMBIGUOUS_RESULT.code()))
-        .andExpect(jsonPath("$.status").value(500))
-        .andExpect(jsonPath("$.retryable").value(false))
-        .andExpect(jsonPath("$.category").value("SYSTEM"));
-  }
-
-  @Test
-  void shouldHandleEmptyResultDataAccessException() throws Exception {
-
-    mockMvc.perform(get("/empty-result"))
-        .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.RESOURCE_NOT_FOUND.code()))
-        .andExpect(jsonPath("$.status").value(404))
-        .andExpect(jsonPath("$.message").value("The requested resource was not found"));
-  }
-
-  @Test
-  void shouldHandleNoResultException() throws Exception {
-
-    mockMvc.perform(get("/jpa-no-result"))
-        .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.RESOURCE_NOT_FOUND.code()))
-        .andExpect(jsonPath("$.status").value(404));
-  }
-
-  @Test
-  void shouldHandlePessimisticLockingFailureException() throws Exception {
-
-    mockMvc.perform(get("/pessimistic-lock-failure"))
-        .andExpect(status().isServiceUnavailable())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.LOCK_TIMEOUT.code()))
-        .andExpect(jsonPath("$.status").value(503))
-        .andExpect(jsonPath("$.retryable").value(true))
-        .andExpect(jsonPath("$.category").value("DATA"));
-  }
-
-  @Test
-  void shouldHandleJpaPessimisticLockException() throws Exception {
-
-    mockMvc.perform(get("/jpa-pessimistic-lock"))
-        .andExpect(status().isServiceUnavailable())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.LOCK_TIMEOUT.code()))
-        .andExpect(jsonPath("$.status").value(503))
-        .andExpect(jsonPath("$.retryable").value(true));
-  }
-
-  @Test
-  void shouldHandleHibernateConstraintViolationException() throws Exception {
-
-    mockMvc.perform(get("/hibernate-constraint-violation"))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.code").value(NativeNervErrorCodes.CONSTRAINT_VIOLATION.code()))
-        .andExpect(jsonPath("$.status").value(400))
-        .andExpect(jsonPath("$.message").value("Data validation failed due to constraint violation"));
-  }
-
-  // ---------------------------------------------------------------------
   // Catch-all
   // ---------------------------------------------------------------------
 
@@ -477,217 +355,5 @@ class DefaultNervExceptionHandlerTest {
     mockMvc.perform(get("/leaky"))
         .andExpect(status().isInternalServerError())
         .andExpect(content().string(Matchers.not(Matchers.containsString("hunter2"))));
-  }
-
-  // ---------------------------------------------------------------------
-  // Fixtures
-  // ---------------------------------------------------------------------
-
-  private static MethodParameter methodParameter() {
-
-    try {
-      Method method = DefaultNervExceptionHandlerTest.class
-          .getDeclaredMethod("validatedHandler", String.class);
-
-      MethodParameter parameter = new MethodParameter(method, 0);
-      parameter.initParameterNameDiscovery(new DefaultParameterNameDiscoverer());
-
-      return parameter;
-
-    } catch (NoSuchMethodException exception) {
-      throw new IllegalStateException(exception);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  private void validatedHandler(String name) {
-    // Reflection target used to build MethodParameter instances.
-  }
-
-  @RestController
-  static class TestController {
-
-    @GetMapping("/nerv")
-    String nerv() {
-      throw NervException.of(NativeNervErrorCodes.CONFLICT, "Duplicate resource");
-    }
-
-    @GetMapping("/retryable")
-    String retryable() {
-      throw NervException.of(NativeNervErrorCodes.GATEWAY_TIMEOUT);
-    }
-
-    @GetMapping("/method-argument-not-valid")
-    String methodArgumentNotValid() throws Exception {
-
-      BeanPropertyBindingResult bindingResult =
-          new BeanPropertyBindingResult(new Object(), "request");
-      bindingResult.addError(new FieldError("request", "name", "Name is required"));
-
-      throw new MethodArgumentNotValidException(methodParameter(), bindingResult);
-    }
-
-    @GetMapping("/bind")
-    String bind() throws Exception {
-
-      BindException exception = new BindException(new Object(), "request");
-      exception.addError(new FieldError("request", "name", "Name is required"));
-
-      throw exception;
-    }
-
-    @GetMapping("/constraint")
-    String constraint() {
-      throw new ConstraintViolationException("Constraint violation", Set.of());
-    }
-
-    @GetMapping("/handler-method-validation")
-    String handlerMethodValidation() {
-
-      MethodParameter parameter = methodParameter();
-
-      ParameterValidationResult result = new ParameterValidationResult(
-          parameter,
-          "",
-          List.of(new DefaultMessageSourceResolvable(
-              new String[] {"NotBlank"},
-              null,
-              "Name is required")),
-          null,
-          null,
-          null,
-          (resolvable, type) -> {
-            throw new IllegalArgumentException("Not supported");
-          });
-
-      throw new HandlerMethodValidationException(
-          MethodValidationResult.create(
-              new DefaultNervExceptionHandlerTest(),
-              parameter.getMethod(),
-              List.of(result)));
-    }
-
-    @GetMapping("/required-param")
-    String requiredParam(@RequestParam("page") int page) {
-      return String.valueOf(page);
-    }
-
-    @GetMapping("/required-header")
-    String requiredHeader(@RequestHeader("X-Tenant-Id") String tenantId) {
-      return tenantId;
-    }
-
-    @GetMapping("/missing-path-variable")
-    String missingPathVariable() throws Exception {
-      throw new MissingPathVariableException("id", methodParameter());
-    }
-
-    @GetMapping("/typed-param")
-    String typedParam(@RequestParam("age") Integer age) {
-      return String.valueOf(age);
-    }
-
-    @GetMapping("/unreadable")
-    String unreadable() {
-      throw new HttpMessageNotReadableException(
-          "Malformed JSON",
-          new MockHttpInputMessage("{".getBytes()));
-    }
-
-    @GetMapping("/no-handler")
-    String noHandler() throws Exception {
-      throw new NoHandlerFoundException("GET", "/missing", new HttpHeaders());
-    }
-
-    @PostMapping(value = "/consumes-json", consumes = MediaType.APPLICATION_JSON_VALUE)
-    String consumesJson() {
-      return "ok";
-    }
-
-    @GetMapping("/not-acceptable")
-    String notAcceptable() throws Exception {
-      throw new HttpMediaTypeNotAcceptableException(List.of(MediaType.APPLICATION_JSON));
-    }
-
-    @GetMapping("/nio-access-denied")
-    String nioAccessDenied() throws Exception {
-      throw new java.nio.file.AccessDeniedException("/secret");
-    }
-
-    @GetMapping("/sasl-authentication")
-    String saslAuthentication() throws Exception {
-      throw new javax.security.sasl.AuthenticationException("sasl failure");
-    }
-
-    @GetMapping("/bad-credentials")
-    String badCredentials() {
-      throw new BadCredentialsException("Bad credentials");
-    }
-
-    @GetMapping("/spring-access-denied")
-    String springAccessDenied() {
-      throw new AccessDeniedException("Access is denied");
-    }
-
-    @GetMapping("/error")
-    String error() {
-      throw new IllegalStateException("boom");
-    }
-
-    @GetMapping("/leaky")
-    String leaky() {
-      throw new IllegalStateException("database password is hunter2");
-    }
-
-    // JPA / Spring Data exception endpoints
-
-    @GetMapping("/data-integrity-violation")
-    String dataIntegrityViolation() {
-      throw new org.springframework.dao.DataIntegrityViolationException(
-          "Duplicate entry 'john@example.com' for key 'users.email'");
-    }
-
-    @GetMapping("/object-optimistic-lock")
-    String objectOptimisticLock() {
-      throw new org.springframework.orm.ObjectOptimisticLockingFailureException(
-          "com.example.User", 42L);
-    }
-
-    @GetMapping("/jpa-optimistic-lock")
-    String jpaOptimisticLock() {
-      throw new jakarta.persistence.OptimisticLockException("Entity version mismatch");
-    }
-
-    @GetMapping("/incorrect-result-size")
-    String incorrectResultSize() {
-      throw new org.springframework.dao.IncorrectResultSizeDataAccessException(1, 3);
-    }
-
-    @GetMapping("/empty-result")
-    String emptyResult() {
-      throw new org.springframework.dao.EmptyResultDataAccessException(1);
-    }
-
-    @GetMapping("/jpa-no-result")
-    String jpaNoResult() {
-      throw new jakarta.persistence.NoResultException("No entity found for query");
-    }
-
-    @GetMapping("/pessimistic-lock-failure")
-    String pessimisticLockFailure() {
-      throw new org.springframework.dao.PessimisticLockingFailureException(
-          "Could not acquire lock on row");
-    }
-
-    @GetMapping("/jpa-pessimistic-lock")
-    String jpaPessimisticLock() {
-      throw new jakarta.persistence.PessimisticLockException("Lock timeout");
-    }
-
-    @GetMapping("/hibernate-constraint-violation")
-    String hibernateConstraintViolation() {
-      throw new org.hibernate.exception.ConstraintViolationException(
-          "could not execute statement", null, "uk_users_email");
-    }
   }
 }
