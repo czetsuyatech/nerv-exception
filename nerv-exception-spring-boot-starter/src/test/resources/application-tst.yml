@@ -1,0 +1,6 @@
+nerv:
+  exception:
+    event:
+      enabled: true
+    kafka:
+      enabled: true

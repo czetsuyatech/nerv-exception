@@ -111,6 +111,7 @@ public class NervExceptionAutoConfiguration {
       return new DefaultNervExceptionHandler(errorResponseMapper);
     }
 
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(org.springframework.dao.DataAccessException.class)
     @ConditionalOnProperty(
         prefix = "nerv.exception.jpa",
@@ -185,8 +186,8 @@ public class NervExceptionAutoConfiguration {
   @ConditionalOnProperty(
       prefix = "nerv.exception.event",
       name = "enabled",
-      havingValue = "true",
-      matchIfMissing = true)
+      havingValue = "true"
+  )
   static class EventConfiguration {
 
     @Bean
@@ -209,8 +210,8 @@ public class NervExceptionAutoConfiguration {
     @ConditionalOnProperty(
         prefix = "nerv.exception.kafka",
         name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true)
+        havingValue = "true"
+    )
     static class KafkaConfiguration {
 
       @Bean

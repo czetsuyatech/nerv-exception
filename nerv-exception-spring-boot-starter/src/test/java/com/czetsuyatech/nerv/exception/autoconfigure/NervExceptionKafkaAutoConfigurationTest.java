@@ -25,16 +25,21 @@ class NervExceptionKafkaAutoConfigurationTest {
   @Test
   void shouldCreateEventBeans() {
 
-    contextRunner.run(context -> {
-      assertThat(context).hasSingleBean(NervEventTraceContextResolver.class);
-      assertThat(context).hasSingleBean(NervErrorEventMapper.class);
-    });
+    contextRunner
+        .withPropertyValues("nerv.exception.event.enabled=true")
+        .run(context -> {
+          assertThat(context).hasSingleBean(NervEventTraceContextResolver.class);
+          assertThat(context).hasSingleBean(NervErrorEventMapper.class);
+        });
   }
 
   @Test
   void shouldCreateKafkaBeansWhenKafkaTemplateExists() {
 
     contextRunner
+        .withPropertyValues(
+            "nerv.exception.event.enabled=true",
+            "nerv.exception.kafka.enabled=true")
         .withBean(KafkaTemplate.class, () -> mock(KafkaTemplate.class))
         .run(context -> {
           assertThat(context).hasSingleBean(NervKafkaHeaderMapper.class);
