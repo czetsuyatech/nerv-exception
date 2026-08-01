@@ -18,7 +18,14 @@ public enum NativeNervErrorCodes implements NervErrorCode {
   INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", "Internal server error", 500, false, "SYSTEM"),
   DOWNSTREAM_SERVICE_ERROR("DOWNSTREAM_SERVICE_ERROR", "Downstream service error", 502, true, "DOWNSTREAM"),
   SERVICE_UNAVAILABLE("SERVICE_UNAVAILABLE", "Service unavailable", 503, true, "SYSTEM"),
-  GATEWAY_TIMEOUT("GATEWAY_TIMEOUT", "Gateway timeout", 504, true, "DOWNSTREAM");
+  GATEWAY_TIMEOUT("GATEWAY_TIMEOUT", "Gateway timeout", 504, true, "DOWNSTREAM"),
+  NOT_ACCEPTABLE("NOT_ACCEPTABLE", "Not acceptable", 406, false, "CLIENT"),
+  UNSUPPORTED_MEDIA_TYPE("UNSUPPORTED_MEDIA_TYPE", "Unsupported media type", 415, false, "CLIENT"),
+
+  // JPA/Spring Data error codes
+  OPTIMISTIC_LOCK_CONFLICT("OPTIMISTIC_LOCK_CONFLICT", "Resource was modified by another transaction", 409, true, "DATA"),
+  AMBIGUOUS_RESULT("AMBIGUOUS_RESULT", "Ambiguous query result", 500, false, "SYSTEM"),
+  LOCK_TIMEOUT("LOCK_TIMEOUT", "Resource is locked", 503, true, "DATA"),;
 
   private final String code;
   private final String message;

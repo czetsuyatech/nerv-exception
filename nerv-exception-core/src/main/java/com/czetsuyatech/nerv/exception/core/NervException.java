@@ -49,6 +49,15 @@ public class NervException extends RuntimeException {
 
   public static NervException of(
       NervErrorCode errorCode,
+      Map<String, Object> details) {
+    return NervException.nervExceptionBuilder()
+        .errorCode(errorCode)
+        .details(details)
+        .build();
+  }
+
+  public static NervException of(
+      NervErrorCode errorCode,
       String message,
       Map<String, Object> details) {
     return NervException.nervExceptionBuilder()

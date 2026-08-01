@@ -68,6 +68,46 @@ NERV Exception solves these problems through a unified error contract built arou
 * Conditional integrations
 * No component scanning
 
+### Security Exception Handling
+
+`nerv-exception` provides built-in handling for the core Spring Security exceptions:
+
+| Spring Security Exception | Native Error Code       |        HTTP Status |
+| ------------------------- | ----------------------- | -----------------: |
+| `AuthenticationException` | `AUTHENTICATION_FAILED` | `401 Unauthorized` |
+| `AccessDeniedException`   | `ACCESS_DENIED`         |    `403 Forbidden` |
+
+These exceptions represent the fundamental authentication and authorization semantics supported by Spring Security and are handled automatically by the library.
+
+### Newer Spring Security Exceptions
+
+Newer versions of Spring Security introduce additional exception types such as `AuthorizationDeniedException`. Since these are framework-specific implementations rather than core security abstractions, they are **not handled by the library by default**.
+
+If your application uses these newer APIs, register an application-specific exception handler with a higher precedence:
+
+```java
+@RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class SecurityExceptionHandler {
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<NervErrorResponse> handle(
+            AuthorizationDeniedException ex,
+            HttpServletRequest request) {
+
+        NervException nervException =
+                NervException.of(NativeNervErrorCodes.ACCESS_DENIED, ex);
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(NervErrorResponseMapper.toResponse(nervException, request));
+    }
+}
+```
+
+This approach keeps `nerv-exception` independent of framework-specific implementations while allowing applications to support newer Spring Security features without changing the library.
+
+
 ---
 
 ## Architecture
@@ -373,6 +413,43 @@ Native Registry
 ```
 
 Duplicate error codes are detected during startup.
+
+---
+
+# Error Categories
+
+| Category       | Definition                                                                      | Typical HTTP Status                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **VALIDATION** | The request is invalid and must be corrected before retrying.                   | **400 Bad Request**, **422 Unprocessable Entity**                                                                             |
+| **BUSINESS**   | The request is valid but cannot be completed due to business or resource state. | **404 Not Found**, **409 Conflict**, **410 Gone**, **422 Unprocessable Entity**                                               |
+| **SECURITY**   | Authentication or authorization failure.                                        | **401 Unauthorized**, **403 Forbidden**                                                                                       |
+| **DEPENDENCY** | Failure caused by a downstream service or infrastructure dependency.            | **408 Request Timeout**, **429 Too Many Requests**, **502 Bad Gateway**, **503 Service Unavailable**, **504 Gateway Timeout** |
+| **SYSTEM**     | Unexpected application failure or configuration problem.                        | **500 Internal Server Error**                                                                                                 |
+
+
+## Examples
+
+| Exception                          | Category   | HTTP |
+|------------------------------------| ---------- | ---- |
+| `MethodArgumentNotValidException`  | VALIDATION | 400  |
+| `ConstraintViolationException`     | VALIDATION | 400  |
+| `HttpMessageNotReadableException`  | VALIDATION | 400  |
+| `IllegalArgumentException`         | VALIDATION | 400  |
+| `EntityNotFoundException`          | BUSINESS   | 404  |
+| `DuplicateKeyException`            | BUSINESS   | 409  |
+| `OptimisticLockException`          | BUSINESS   | 409  |
+| `BusinessRuleViolationException`   | BUSINESS   | 422  |
+| `BadCredentialsException`          | SECURITY   | 401  |
+| `AccessDeniedException`            | SECURITY   | 403  |
+| `FeignException.BadGateway`        | DEPENDENCY | 502  |
+| `FeignException.ServiceUnavailable` | DEPENDENCY | 503  |
+| `SocketTimeoutException`           | DEPENDENCY | 504  |
+| `CannotGetJdbcConnectionException` | DEPENDENCY | 503  |
+| `KafkaException`                   | DEPENDENCY | 503  |
+| `NullPointerException`             | SYSTEM     | 500  |
+| `IllegalStateException`            | SYSTEM     | 500  |
+| `Configuration/startup errors`      | SYSTEM     | 500  |
+
 
 ---
 
