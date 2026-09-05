@@ -22,12 +22,12 @@ public class NervExceptionProperties {
   /**
    * Expose original exception message for non-Nerv exceptions.
    */
-  private boolean exposeInternalMessage = false;
+  private boolean exposeInternalMessage = true;
 
   /**
    * Include cause class name in details.
    */
-  private boolean includeCause = false;
+  private boolean includeCause = true;
 
   /**
    * Include stack trace in details.

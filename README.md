@@ -224,6 +224,94 @@ NERV Exception consumes trace information but does not implement a tracing syste
 
 ---
 
+# Configuration
+
+The following values match the defaults in `NervExceptionProperties`. Override them in your application's `application.yml` as needed:
+
+```yaml
+nerv:
+  exception:
+    enabled: true
+    include-details: true
+    expose-internal-message: true
+    include-cause: true
+    include-stack-trace: false
+    kafka:
+      enabled: true
+      source: application
+      dlq-topic-suffix: .DLQ
+```
+
+| Property (under `nerv.exception`) | Default | Purpose |
+| -------------------------------- | ------- | ------- |
+| `enabled` | `true` | Enable NERV exception handling. |
+| `include-details` | `true` | Include exception details in the response. |
+| `expose-internal-message` | `true` | Expose the original message for non-NERV exceptions where supported by the mapper. |
+| `include-cause` | `true` | Include the cause class name in details when a cause is available. |
+| `include-stack-trace` | `false` | Include the stack trace in details. |
+| `kafka.enabled` | `true` | Enable Kafka integration when its required dependencies and beans are available. |
+| `kafka.source` | `application` | Source name for Kafka error events. |
+| `kafka.dlq-topic-suffix` | `.DLQ` | Suffix appended to dead-letter topic names. |
+
+`expose-internal-message` and `include-cause` now default to `true`. Set both to `false` to retain the previous defaults.
+
+## Service Origin and Version
+
+The default Spring Boot origin resolver populates `origin` using:
+
+| Field | Source | Fallback |
+| ----- | ------ | -------- |
+| `service` | `spring.application.name` | `unknown-service` |
+| `instance` | Local hostname | `unknown-instance` |
+| `version` | Spring Boot `BuildProperties.getVersion()` | `unknown-version` |
+| `environment` | Active Spring profiles, joined with commas | `default` |
+
+To capture the service version, add a `build-info` execution to **`org.springframework.boot:spring-boot-maven-plugin` in the executable service module's `pom.xml`** (for example, `app/pom.xml` in a multi-module application):
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>build-info</id>
+                    <goals>
+                        <goal>build-info</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+If the plugin already exists, merge this execution into its existing `<executions>` and retain its configuration and other executions. The plugin version is managed when using `spring-boot-starter-parent`.
+
+The goal generates `target/classes/META-INF/build-info.properties` from the service's Maven project metadata, including `${project.version}`. Spring Boot loads that resource into a `BuildProperties` bean, which NERV uses automatically. See the [Spring Boot build-info documentation](https://docs.spring.io/spring-boot/maven-plugin/build-info.html).
+
+Rebuild and restart the service after adding the execution. For local IDE runs, execute Maven's `process-resources` phase before launching and ensure the generated resources are on the runtime classpath. From a multi-module project root with an `app` module:
+
+```shell
+mvn -pl app -am process-resources
+```
+
+For a service with Maven version `2.9.0-SNAPSHOT`, the response can then contain:
+
+```json
+"origin": {
+  "service": "nba-responses-api",
+  "instance": "Raiden",
+  "version": "2.9.0-SNAPSHOT",
+  "environment": "local"
+}
+```
+
+If `version` remains `unknown-version`, verify that the generated file contains `build.version` and is present on the running application's classpath. Configure build information in each executable service module so NERV captures that service's version.
+
+---
+
 # Quick Start
 
 ## Define an Error Code
